@@ -1,0 +1,11 @@
+[Unit]
+Description=Copy and Execute Update From USB-Stick if available
+After=syslog.target network.target systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/nonlinear/scripts/install-update.sh
+
+[Install]
+WantedBy=multi-user.target
+
