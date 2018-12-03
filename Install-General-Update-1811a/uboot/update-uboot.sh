@@ -2,6 +2,20 @@
 
 set -x
 
+EMMC_NEW_UUID="ea9ed055-84c5-4c76-b8c3-aba0b9eeb083"
+
+printf "-1: Check if bootloader is already installed..."
+# NOTE: This doesn't really check if the bootloader is actually installed !!
+# It just uses the UUID thing as indicator of a previous run of this installer.
+# Therefore, one cannot use this script to update to another build of a bootloader,
+# unless the UUID is also changed to a new, unique one.
+if [ -L /dev/disk/by-uuid/${EMMC_NEW_UUID} ] ; then
+	printf "  Bootloader update already in place. Exiting with no action.\n"
+	exit 0
+else	
+	printf "  Bootloader needs update\n"
+fi
+
 BASE_DIR=$(dirname "$0")
 
 chmod +x ${BASE_DIR}/bbb-tools.sh
@@ -25,7 +39,6 @@ EMMC_MOUNT_POINT="$(bbb_get_emmc_mountpoint)"
 if [ "${EMMC_MOUNT_POINT}" = "" ]; then
 	EMMC_MOUNT_POINT="/tmp/emmc"
 fi
-EMMC_NEW_UUID="ea9ed055-84c5-4c76-b8c3-aba0b9eeb083"
 
 SFDISK_CMD_STRING=",,L,\n"
 DO_BACKUP=true
