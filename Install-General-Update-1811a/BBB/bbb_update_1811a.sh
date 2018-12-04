@@ -21,12 +21,14 @@ fi
 chmod 0755 /update/BBB/playground/resources/pack-journal.sh
 chmod 0755 /update/BBB/playground/playground
 chmod 0755 /update/BBB/playground/bbbb
+chmod 0666 /update/BBB/playground/dirty
+
 
 exit_code=0
 if [[ ( -d /nonlinear/playground-$version ) \
-&& ( ! -f /nonlinear/playground-$version/not-clean ) \
+&& ( ! -f /nonlinear/playground-$version/dirty ) \
 && ( "`readlink /nonlinear/playground`" = "/nonlinear/playground-$version" ) ]] ; then # PG correctly installed before?
-	printf "%s\r\n" "W50 UI update: Warning, this UI has been successfully installed before!" >> /update/errors.log
+	printf "%s\r\n" "W50 UI update: Warning, this UI has been successfully installed before. Quit without installing." >> /update/errors.log
 	exit_code=50 	# 50 indicates warnings only, no fatal errors
 else # new install, or overriding a failed install
 	rm -rf  /nonlinear/playground-$version		# remove any leftovers from a previous unsuccessful install
@@ -68,8 +70,4 @@ fi
 
 
 # come here only when no errors
-if [ -f /nonlinear/playground-$version/not-clean ] ; then
-	chmod 0666  /nonlinear/playground-$version/not-clean
-	rm -f  /nonlinear/playground-$version/not-clean				# remove "not-clean" file to indicate succesful install
-fi
-exit $exit_code	# clear returncode --> success
+exit $exit_code

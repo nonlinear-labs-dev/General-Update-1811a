@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-11-30 KSTR
+# last changed: 2018-12-04 KSTR
 # version : 1.0
 #
 # ---------- create and restore presets backup -----------
@@ -40,6 +40,7 @@ if [ "$ACTION" = "--create" ] ; then
 	elif [ -d /preset-manager ] ; then # alternate (non-flash) location "/internalstorage/preset-manager"
 		PRESET_SOURCE_DIR=/preset-manager
 	else # nothing to backup, exit gracefully
+		printf "%s\r\n" "W60 presets: no data to backup/restore" >> /update/errors.log
 		exit 0
 	fi
 	
@@ -57,22 +58,27 @@ elif [ "$ACTION" = "--restore" ] ; then
 	if [ -d /preset-manager.$VERSION ] ; then # presets backup exists
 		# check for a properly config'd  /internalstorage/preset-manager
 		if [ ! -d /internalstorage ] ; then  # mountpoint not preset
-			error=65
+			DESTINATION_PATH=/preset-manager # so, use alternate path
 		elif ! ( mount | grep /internalstorage >/dev/null ) ; then # not mounted 
-			error=66
+			DESTINATION_PATH=/internalstorage/preset-manager # so, use primary path because PG will search here first
 		else # everthing OK
-			rm -rf /internalstorage/preset-manager  # kill any data if exist
-			mkdir -p /internalstorage/preset-manager
-			cp -a /preset-manager.$VERSION/*  /internalstorage/preset-manager/ # restore presets
-			if [ $? -ne 0 ] ; then # copy failed
-				error=67
-			fi
-			rm -rf /preset-manager.$VERSION  # remove backup
+			DESTINATION_PATH=/internalstorage/preset-manager
 		fi
+		
+		rm -rf $DESTINATION_PATH  # kill any data if exist
+		cp -a /preset-manager.$VERSION  $DESTINATION_PATH # restore presets
+		if [ $? -ne 0 ] ; then # copy failed
+			error=65
+		fi
+		
+		rm -rf /preset-manager.$VERSION  # remove backup
 		if [ $error -ne 0 ] ; then # restore failed
 			printf "%s\r\n" "E${error} presets: restore failed for \"$VERSION\"" >> /update/errors.log
 			exit $error
 		fi
+	else # no backup found
+		printf "%s\r\n" "W60 presets: no data to backup/restore" >> /update/errors.log
+		exit 0
 	fi
 else
 	printf "%s\r\n" "E63 presets: illegal action given" >> /update/errors.log
