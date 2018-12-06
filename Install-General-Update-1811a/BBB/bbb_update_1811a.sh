@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-11-27 KSTR
+# last changed: 2018-12-06 KSTR
 # version : 1.0
 #
 # ---------- Install playground files & services, update to Rev.1811a -----------
@@ -24,12 +24,11 @@ chmod 0755 /update/BBB/playground/bbbb
 chmod 0666 /update/BBB/playground/dirty
 
 
-exit_code=0
 if [[ ( -d /nonlinear/playground-$version ) \
 && ( ! -f /nonlinear/playground-$version/dirty ) \
 && ( "`readlink /nonlinear/playground`" = "/nonlinear/playground-$version" ) ]] ; then # PG correctly installed before?
 	printf "%s\r\n" "W50 UI update: Warning, this UI has been successfully installed before. Quit without installing." >> /update/errors.log
-	exit_code=50 	# 50 indicates warnings only, no fatal errors
+	exit 50 	# 50 indicates warnings only, no fatal errors
 else # new install, or overriding a failed install
 	rm -rf  /nonlinear/playground-$version		# remove any leftovers from a previous unsuccessful install
 
@@ -68,6 +67,5 @@ if [ $errors -ne 0 ] ; then
 	exit 53
 fi
 
-
 # come here only when no errors
-exit $exit_code
+exit 0
