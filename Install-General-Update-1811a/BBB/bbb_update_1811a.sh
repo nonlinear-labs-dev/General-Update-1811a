@@ -49,7 +49,7 @@ if [ $errors -eq 0 ] ; then
 	chmod 0644  /update/BBB/$FILE `# remove potential executable flags` \
 	&& cp -pf   /update/BBB/$FILE  /etc/systemd/system/$FILE # copy w/ forced overwrite
 	if [ $? -ne 0 ] ; then errors=1 ; fi
-	ln -s  ../$FILE /etc/systemd/system/multi-user.target.wants/$FILE  # symlink BBBB service if not present already
+	ln -nfs  ../$FILE /etc/systemd/system/multi-user.target.wants/$FILE  # symlink BBBB service, forced overwrite
 fi
 
 if [ $errors -eq 0 ] ; then

@@ -32,6 +32,7 @@ if [ $return_code -eq 0 ]; then  # host is reachable
   # ... otherwise cp would succesfully copy into /mnt/windows as a regular local directory!
   mount.cifs //192.168.10.10/update /mnt/windows -o user=TEST,password=TEST  &&  cp -af "$origin" "$destination"
   return_code=$?  # save result
+  sync
   umount -f /mnt/windows
   if [ $return_code -eq 0 ] ; then	 # mount & file copy was succesful
 	exit 0

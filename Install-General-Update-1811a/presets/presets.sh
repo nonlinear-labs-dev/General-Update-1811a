@@ -56,7 +56,7 @@ elif [ "$ACTION" = "--restore" ] ; then
 	error=0
 	if [ -d /preset-manager.$VERSION ] ; then # presets backup exists
 		# check for a properly config'd  /internalstorage/preset-manager
-		if [ ! -d /internalstorage ] ; then  # mountpoint not preset
+		if [ ! -d /internalstorage ] ; then  # mountpoint not present
 			DESTINATION_PATH=/preset-manager # so, use alternate path
 		elif ! ( mount | grep /internalstorage >/dev/null ) ; then # not mounted 
 			DESTINATION_PATH=/internalstorage/preset-manager # so, use primary path because PG will search here first
@@ -70,9 +70,10 @@ elif [ "$ACTION" = "--restore" ] ; then
 		cp -a /preset-manager.$VERSION  $DESTINATION_PATH # restore presets
 		if [ $? -ne 0 ] ; then # copy failed
 			error=65
+		else
+			rm -rf /preset-manager.$VERSION  # remove backup
 		fi
 		
-		rm -rf /preset-manager.$VERSION  # remove backup
 		if [ $error -ne 0 ] ; then # restore failed
 			printf "%s\r\n" "E${error} presets: restore failed for \"$VERSION\"" >> /update/errors.log
 			exit $error

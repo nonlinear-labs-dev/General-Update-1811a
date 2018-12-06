@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-04 KSTR
+# last changed: 2018-12-06 KSTR
 # version : 1.0
 #
 # ---------- new style update process -----------
@@ -78,6 +78,7 @@ while  pidof playground ; do
 	echo "stopping PG..."
 	sleep 0.1
 done
+systemctl stop bbbb
 
 rm -f /update/errors.log
 rm -f /mnt/usb-stick/nonlinear-c15-update.log
@@ -277,7 +278,7 @@ if [ $errors -eq 0 ] ; then # update executed successfully
 	echo "update finished"
 	soled_msg "update to \"$VERSION\" done." "$MSG_REBOOT"
 else # errors during update
-	if [ $fatal -eq 0 ] ; then # not a fatal error, might be spurios error, user shall retry
+	if [ $fatal -eq 0 ] ; then # not a fatal error, might be spurious error, user shall retry
 		echo "update failed"
 		soled_msg "update error! please retry" "$MSG_REBOOT"
 	else # fatal error, try to recover previous system and PG state from backup
