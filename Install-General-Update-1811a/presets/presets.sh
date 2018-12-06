@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-04 KSTR
+# last changed: 2018-12-06 KSTR
 # version : 1.0
 #
 # ---------- create and restore presets backup -----------
@@ -50,7 +50,6 @@ if [ "$ACTION" = "--create" ] ; then
 		printf "%s\r\n" "E64 presets: could not backup data for \"$VERSION\"" >> /update/errors.log
 		exit 64
 	fi
-	rm -rf  /preset-manager  # remove any alternate (and now non-used anyway) dir
 
 elif [ "$ACTION" = "--restore" ] ; then
 # restore presets from backup, we assume a correctly mounted flash (/internalstorage), otherwise fail
@@ -65,7 +64,9 @@ elif [ "$ACTION" = "--restore" ] ; then
 			DESTINATION_PATH=/internalstorage/preset-manager
 		fi
 		
-		rm -rf $DESTINATION_PATH  # kill any data if exist
+		# next three commands are prone to cause lost data during a power-fail etc. !!
+		rm -rf /preset-manager  # forced remove any alternate (and now non-used anyway) dir
+		rm -rf $DESTINATION_PATH  # kill any destination data if exist (might be above dir, though)
 		cp -a /preset-manager.$VERSION  $DESTINATION_PATH # restore presets
 		if [ $? -ne 0 ] ; then # copy failed
 			error=65
