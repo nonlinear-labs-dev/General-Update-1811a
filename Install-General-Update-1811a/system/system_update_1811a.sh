@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-11-27 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- Install system files, update to Rev.1811a -----------
@@ -8,16 +8,14 @@
 
 set -x
 
-# version id of this system update
+# version id of this system update, used only for temporary filename (not persistent)
 VERSION=sys1811a
-
-systemctl stop playground
 
 #install new update installer.
 echo "Copy new update installer"
 chmod 0755 /update/system/install-update.sh `# set executable` \
-&& cp -pf  /update/system/install-update.sh  /nonlinear/scripts/install-update.sh.1811a `# copy with a temporary name` \
-&& mv -f   /nonlinear/scripts/install-update.sh.1811a  /nonlinear/scripts/install-update.sh # atomic rename (fail-safe)
+&& cp -pf  /update/system/install-update.sh  /nonlinear/scripts/install-update.sh.$VERSION `# copy with a temporary name` \
+&& mv -f   /nonlinear/scripts/install-update.sh.$VERSION  /nonlinear/scripts/install-update.sh # atomic overwriting rename (fail-safe)
 if [ $? -ne 0 ] ; then
 	printf "%s\r\n" "E21 system update: installing new update installer script failed" >> /update/errors.log
 	exit 21
@@ -26,7 +24,7 @@ fi
 
 echo "Copy new scripts"
 chmod 0755 /update/system/scripts/* \
-&& cp -pf  /update/system/scripts/*  /nonlinear/scripts/
+&& cp -af  /update/system/scripts/*  /nonlinear/scripts/	# note : does NOT copy hidden files
 if [ $? -ne 0 ] ; then
 	printf "%s\r\n" "E22 system update: installing new system scripts failed" >> /update/errors.log
 	exit 22
@@ -67,8 +65,9 @@ if [ $errors -eq 0 ] ; then
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
 
-# someting went wrong, try recover from the backups
+# something went wrong
 if [ $errors -ne 0 ] ; then
+	echo "installing new system services failed"
 	printf "%s\r\n" "E23 system update: installing new system services failed" >> /update/errors.log
 	exit 23
 fi
