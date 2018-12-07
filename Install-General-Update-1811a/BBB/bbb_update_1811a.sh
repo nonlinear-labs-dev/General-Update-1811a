@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-12-06 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- Install playground files & services, update to Rev.1811a -----------
@@ -23,17 +23,22 @@ chmod 0755 /update/BBB/playground/playground
 chmod 0755 /update/BBB/playground/bbbb
 chmod 0666 /update/BBB/playground/dirty
 
+exit_code=0
 
 if [[ ( -d /nonlinear/playground-$version ) \
 && ( ! -f /nonlinear/playground-$version/dirty ) \
-&& ( "`readlink /nonlinear/playground`" = "/nonlinear/playground-$version" ) ]] ; then # PG correctly installed before?
+&& ( "`readlink /nonlinear/playground`" = "/nonlinear/playground-$version" ) \
+&& ( "`cat /nonlinear/playground/NonMaps/war/nonmaps-version.txt`" = "`cat /update/BBB/playground/NonMaps/war/nonmaps-version.txt`" ) ]]
+then # this exact PG was correctly installed before
 	printf "%s\r\n" "W50 UI update: Warning, this UI has been successfully installed before. Quit without installing." >> /update/errors.log
-	exit 50 	# 50 indicates warnings only, no fatal errors
-else # new install, or overriding a failed install
+	exit_code=50 	# 50 indicates warnings only, no fatal errors
+	# we actually do NOT exit here because the forced system files update that has just finished before this script is called
+	# overwrites the playground.service with the version *without* BBBB !!!! ==> services reinstall as below required !
+else # new install (incl. same global version but different PG build), or overriding a failed install
 	rm -rf  /nonlinear/playground-$version		# remove any leftovers from a previous unsuccessful install
 
 	# copy all PG files and folders. Test if PG and BBBB executables are present.
-	cp -pfr /update/BBB/playground /nonlinear/playground-$version \
+	cp -af /update/BBB/playground /nonlinear/playground-$version \
 	&& test -x /nonlinear/playground-$version/playground \
 	&& test -x /nonlinear/playground-$version/bbbb
 	if [ $? -ne 0 ] ; then
@@ -47,7 +52,7 @@ errors=0
 if [ $errors -eq 0 ] ; then
 	FILE=bbbb.service
 	chmod 0644  /update/BBB/$FILE `# remove potential executable flags` \
-	&& cp -pf   /update/BBB/$FILE  /etc/systemd/system/$FILE # copy w/ forced overwrite
+	&& cp -af   /update/BBB/$FILE  /etc/systemd/system/$FILE # copy w/ forced overwrite
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 	ln -nfs  ../$FILE /etc/systemd/system/multi-user.target.wants/$FILE  # symlink BBBB service, forced overwrite
 fi
@@ -55,7 +60,7 @@ fi
 if [ $errors -eq 0 ] ; then
 	FILE=playground.service
 	chmod 0644  /update/BBB/$FILE `# remove potential executable flags` \
-	&& cp -pf   /update/BBB/$FILE  /etc/systemd/system/$FILE `# copy w/ forced overwrite` \
+	&& cp -af   /update/BBB/$FILE  /etc/systemd/system/$FILE `# copy w/ forced overwrite` \
 	&& ln -nfs  /nonlinear/playground-$version /nonlinear/playground # update symlink to new playground
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
@@ -68,4 +73,4 @@ if [ $errors -ne 0 ] ; then
 fi
 
 # come here only when no errors
-exit 0
+exit $exit_code
