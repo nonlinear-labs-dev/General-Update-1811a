@@ -74,14 +74,12 @@ MSG_FAILED_WITH_ERROR_CODE="FAILED! Error Code: "
 
 
 systemctl stop playground
-while  pidof playground ; do
-	echo "stopping PG..."
-	sleep 0.1
-done
 systemctl stop bbbb
 
 rm -f /update/errors.log
-rm -f /mnt/usb-stick/nonlinear-c15-update.log
+LOG_FILE=/mnt/usb-stick/nonlinear-c15-update.log.txt
+rm -f $LOG_FILE
+
 
 errors=0
 warnings=0
@@ -94,7 +92,7 @@ if [ ! -L /nonlinear/playground ] ; then    #playground is NOT a symlink
 	&& ln -s /nonlinear/playground_first_install /nonlinear/playground # and make symlink if successful
 	# NOTE: if this ever fails we're in big trouble anyway
 	if [ $? -ne 0 ] ; then
-		echo "Fatal system error! Contact Nonlinear Labs.\r" > /mnt/usb-stick/nonlinear-c15-update.log
+		echo "Fatal system error! Contact Nonlinear Labs.\r" > $LOG_FILE
 		soled_msg "Fatal system error!" "Contact Nonlinear Labs."
 		# loop until reboot
 		while true
@@ -133,14 +131,14 @@ if [ -d "/update/uboot/" ] ; then
 	chmod +x /update/uboot/update-uboot.sh
 	/bin/sh /update/uboot/update-uboot.sh  1>/update/uboot/uboot.stdout.log  2>/update/uboot/uboot.stderr.log
 	return_code=$?
-	cp /update/uboot/uboot.stdout.log  /mnt/usb-stick
-	cp /update/uboot/uboot.stderr.log  /mnt/usb-stick
 	if [ $return_code -eq 0 ] ; then
-		soled_msg "updating boot-loader..." "Done. Check log files!"
+		soled_msg "updating boot-loader..." "$MSG_DONE"
 	else
 		soled_msg "updating boot-loader..." "Error:$return_code. Check log files!"
+		cp /update/uboot/uboot.stdout.log  /mnt/usb-stick
+		cp /update/uboot/uboot.stderr.log  /mnt/usb-stick
 	fi
-	sleep 3
+	sleep 2
 fi
 
 
@@ -164,26 +162,6 @@ else
 fi
 
 
-# create system & playground backups
-soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DO_NOT_SWITCH_OFF"
-chmod +x /update/backup/backup.sh
-/bin/sh  /update/backup/backup.sh --create $VERSION
-return_code=$?
-if [ $return_code -eq 0 ]; then 	# error codes 10...19
-	soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE"
-	sleep 1
-else
-	if [ $return_code -ne 10 ] ; then
-		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
-		errors=1; fatal=1; skip=1
-	else
-		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
-		warnings=1
-	fi
-	sleep 2
-fi
-
-
 
 # LPC update
 if [ true ]; then 	# LPC update unconditionally, no backup anyway
@@ -193,7 +171,6 @@ if [ true ]; then 	# LPC update unconditionally, no backup anyway
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 30...39
 		soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE"
-		sleep 1
 	else
 		if [ $return_code -ne 30 ] ; then
 			soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
@@ -202,8 +179,8 @@ if [ true ]; then 	# LPC update unconditionally, no backup anyway
 			soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
-		sleep 2
 	fi
+	sleep 2
 fi
 
 # ePC update
@@ -214,7 +191,6 @@ if [ true ]; then 	# ePC update unconditionally, no backup anyway
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 40...49
 		soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE"
-		sleep 1
 	else
 		if [ $return_code -ne 40 ] ; then
 			soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
@@ -223,9 +199,27 @@ if [ true ]; then 	# ePC update unconditionally, no backup anyway
 			soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
-		sleep 2
+	fi
+	sleep 2
+fi
+
+# create system & playground backups
+soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DO_NOT_SWITCH_OFF"
+chmod +x /update/backup/backup.sh
+/bin/sh  /update/backup/backup.sh --create $VERSION
+return_code=$?
+if [ $return_code -eq 0 ]; then 	# error codes 10...19
+	soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE"
+else
+	if [ $return_code -ne 10 ] ; then
+		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
+		errors=1; fatal=1; skip=1
+	else
+		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+		warnings=1
 	fi
 fi
+sleep 2
 
 # system files update
 if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
@@ -235,7 +229,6 @@ if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 20...29
 		soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE"
-		sleep 1
 	else
 		if [ $return_code -ne 20 ] ; then
 			soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
@@ -244,8 +237,8 @@ if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
 			soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
-		sleep 2
 	fi
+	sleep 2
 fi
 
 # playground update
@@ -256,7 +249,6 @@ if [[ ( $skip -eq 0 ) && ( $fatal -eq 0 ) ]]; then 	# playground update only if 
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 50...59
 		soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE"
-		sleep 1
 	else
 		if [ $return_code -ne 50 ] ; then
 			soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
@@ -265,8 +257,8 @@ if [[ ( $skip -eq 0 ) && ( $fatal -eq 0 ) ]]; then 	# playground update only if 
 			soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
-		sleep 2
 	fi
+	sleep 2
 fi
 
 
@@ -290,7 +282,6 @@ else # errors during update
 		return_code=$? 	# error codes 10...19
 		if [ $return_code -eq 0 ]; then
 			soled_msg "$MSG_UNINSTALLING""\"$VERSION\"..." "$MSG_DONE"
-			sleep 1
 		else
 			if [ $return_code -ne 10 ] ; then
 				soled_msg "$MSG_UNINSTALLING""\"$VERSION\"..." "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
@@ -304,7 +295,7 @@ else # errors during update
 fi
 
 if [ -f /update/errors.log ] ; then
-	cp -f /update/errors.log /mnt/usb-stick/nonlinear-c15-update.log # copy log file if any
+	cp -f /update/errors.log $LOG_FILE # copy log file if any
 fi
 
 # loop until reboot
