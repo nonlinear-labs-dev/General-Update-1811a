@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-11-27 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- install a new audio engine on the ePC -----------
