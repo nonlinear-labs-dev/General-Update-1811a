@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-11-27 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- intstall update from .tar archive on USB-stick
@@ -29,7 +29,8 @@ fi
 #if tar is present on stick
 if [ -f /mnt/usb-stick/nonlinear-c15-update.tar ]
 then
-        #stop the playground
+        #stop the playground (and any BBBB)
+        systemctl stop bbbb
         systemctl stop playground
 
 	#Delete old Updates
@@ -58,5 +59,10 @@ then
 		/bin/sh /update/run.sh
 		soled_msg "PLEASE RESTART C15 NOW"
 	fi
+
+	while true
+	do
+		sleep 1
+	done
 fi
 exit 0
