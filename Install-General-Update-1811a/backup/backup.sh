@@ -1,11 +1,11 @@
 #!/bin/sh
 
 #
-# last changed: 2018-11-27 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- create and restore playground and system/services backups -----------
-# this is specific to the general update version wrt /lib/systemd/system actions !!
+# this is specific to the general update version wrt to the system services !!
 
 set -x  # debug on
  
@@ -16,6 +16,7 @@ if [ -z "$ACTION" ] ; then
 fi
 
 VERSION=$2
+#note : the passed version string should be short (<= 5 chars) and only contain letters and digits
 if [ -z "$VERSION" ] ; then
 	printf "%s\r\n" "E12 backup/restore: no version given" >> /update/errors.log
 	exit 12
@@ -30,7 +31,7 @@ if [ "$ACTION" = "--create" ] ; then
 # but don't overwrite an existing backup from a previous run of this update,
 # as this would wrongly backup the new files and would spoil a later rollback
 	did_something=false
-	# copy /etc/systemd/system and /lib/systemd/system folders
+	# copy complete /etc/systemd/system and /lib/systemd/system folders, including ../multi-user.target.wants/ etc
 	FOLDER=/etc/systemd/system
 	[ ! -d $FOLDER.$VERSION ]  &&  cp -a  $FOLDER  $FOLDER.$VERSION &&  did_something=true
 	FOLDER=/lib/systemd/system
@@ -49,34 +50,50 @@ if [ "$ACTION" = "--create" ] ; then
 
 elif [ "$ACTION" = "--restore" ] ; then
 # restore from backup
-	# restore /etc/systemd/system and /lib/systemd/system folders. EXTREMLY PRONE TO POWER FAIL CORRUPTION!!!
+# NOTE: /etc/systemd/system/install-update-from-usb.service will NOT be restored !
+	# restore /etc/systemd/system and /lib/systemd/system folders. PRONE TO POWER FAIL CORRUPTION!!!
 	did_something=false
 	FOLDER=/etc/systemd/system
-	if [ -d $FOLDER.$VERSION ] ; then
-		rm -rf  $FOLDER.temp
-		mv  $FOLDER  $FOLDER.temp  &&  mv -f  $FOLDER.$VERSION  $FOLDER
-		rm -rf  $FOLDER.temp
+	if [ -d $FOLDER.$VERSION ] ; then # backup present
+		FILE=bbbb.service
+		if [ -f $FOLDER.$VERSION/$FILE ] ; then # file exists in backup
+			cp -af  $FOLDER.$VERSION/$FILE  $FOLDER/$FILE # copy it into original folder, forced overwrite
+			systemctl enable $FILE # and (re-)establish symlink to enable it
+		else # file doesn't exist in backup
+			systemctl disable $FILE # disable service
+			rm -f $FOLDER/$FILE	# and delete it
+		fi
+
+		FILE=playground.service
+		if [ -f $FOLDER.$VERSION/$FILE ] ; then # file exists in backup
+			cp -af  $FOLDER.$VERSION/$FILE  $FOLDER/$FILE # copy it into original folder, forced overwrite
+			systemctl enable $FILE # and (re-)establish symlink to enable it (redundant in this case)
+		fi # note : playgrund must exist anyway so no point to deal with it when missing
+		
+		rm -rf  $FOLDER.$VERSION # delete the backup folder
 		did_something=true
 	fi
 
 	FOLDER=/lib/systemd/system
-	if [ -d $FOLDER.$VERSION ] ; then
-		cp -pf  $FOLDER.$VERSION/systemd-modules-load.service  $FOLDER/systemd-modules-load.service
-		cp -pf  $FOLDER.$VERSION/systemd-poweroff.service  $FOLDER/systemd-poweroff.service
-		rm -rf  $FOLDER.$VERSION
+	if [ -d $FOLDER.$VERSION ] ; then # backup present
+		cp -af  $FOLDER.$VERSION/systemd-modules-load.service  $FOLDER/systemd-modules-load.service
+		cp -af  $FOLDER.$VERSION/systemd-poweroff.service  $FOLDER/systemd-poweroff.service
+		# note : no need to copy the "enable" symlinks as they aren't touched anyway
+		rm -rf  $FOLDER.$VERSION # delete the backup folder
 		did_something=true
 	fi
 	
 	# restore /nonlinear/scripts folder and /nonlinear/playground symlink
 	FOLDER=/nonlinear/scripts
-	if [ -d $FOLDER.$VERSION ] ; then
-		rm -rf  $FOLDER.temp
-		mv  $FOLDER  $FOLDER.temp  &&  mv -f  $FOLDER.$VERSION  $FOLDER
-		rm -rf  $FOLDER.temp
+	if [ -d $FOLDER.$VERSION ] ; then # backup present
+		# note: this will not delete new data that will be unused in the restored state anyway
+		cp -af  $FOLDER.$VERSION/*  $FOLDER # copy old data (merge folders)
+		rm -rf  $FOLDER.$VERSION # delete the backup
 		did_something=true
 	fi
 
 	if [ -L /nonlinear/playground.$VERSION ] ; then
+		# note : the actual folder containing the playground files is not deleted, only the symlink is restored
 		ln -nsf  `readlink /nonlinear/playground.$VERSION`  /nonlinear/playground `# restore symlink to original PG` \
 		&&  unlink /nonlinear/playground.$VERSION # and delete backup symlink
 		did_something=true
