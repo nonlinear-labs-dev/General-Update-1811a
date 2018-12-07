@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-11-30 KSTR
+# last changed: 2018-12-07 KSTR
 # version : 1.0
 #
 # ---------- uninstall a previous update of system and playground -----------
@@ -48,9 +48,12 @@ function soled_msg() {
 VERSION=1811a
 
 systemctl stop playground
+systemctl stop bbbb
 
 rm -f /update/errors.log
-rm -f /mnt/usb-stick/nonlinear-c15-update.log
+
+LOG_FILE=/mnt/usb-stick/nonlinear-c15-update.log.txt
+rm -f $LOG_FILE
 
 # First, fix playground reference to symlink if needed
 if [ ! -L /nonlinear/playground ] ; then    #playground is NOT a symlink
@@ -58,7 +61,7 @@ if [ ! -L /nonlinear/playground ] ; then    #playground is NOT a symlink
 	&& ln -s /nonlinear/playground_first_install /nonlinear/playground # and make symlink if successful
 	# NOTE: if this ever fails we're in big trouble anyway
 	if [ $? -ne 0 ] ; then
-		echo "Fatal system error! Contact Nonlinear Labs.\r" > /mnt/usb-stick/nonlinear-c15-update.log
+		echo "Fatal system error! Contact Nonlinear Labs.\r" > $LOG_FILE
 		soled_msg "Fatal system error!" "Contact Nonlinear Labs."
 		# loop until reboot
 		while true
@@ -89,7 +92,7 @@ else
 fi
 
 if [ -f /update/errors.log ] ; then
-	cp -f /update/errors.log /mnt/usb-stick/nonlinear-c15-update.log # copy log file if any
+	cp -f $LOG_FILE # copy log file if any
 fi
 
 # loop until reboot
