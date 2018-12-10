@@ -1,20 +1,34 @@
 #!/bin/sh
 #
-# last changed: 2018-12-07 KSTR
+# last changed: 2018-12-10 KSTR
 # version : 1.0
 #
 # ---------- intstall update from .tar archive on USB-stick
 
 
+if [ -x /nonlinear/text2soled/text2soled ] ; then
+	TEXT2SOLED_EXE=/nonlinear/text2soled/text2soled
+elif [ -x /nonlinear/text2soled ] ; then
+	TEXT2SOLED_EXE=/nonlinear/text2soled
+else
+	TEXT2SOLED_EXE=echo
+fi
+
 function soled_msg() {
 	# dual paths used for "text2soled" binary for backwards compatibility
-	if [ -x /nonlinear/text2soled/text2soled ] ;
+	if (($#==1))
 	then
-		/nonlinear/text2soled/text2soled clear
-		/nonlinear/text2soled/text2soled "$1" 5 85
-	else
-		/nonlinear/text2soled clear
-		/nonlinear/text2soled "$1" 5 85
+		$TEXT2SOLED_EXE clear
+		$TEXT2SOLED_EXE "$1" 5 85
+#		$TEXT2SOLED_EXE "$1" 5 25
+	fi
+	if (($#==2))
+	then
+		$TEXT2SOLED_EXE clear
+		$TEXT2SOLED_EXE "$1" 5 78
+		$TEXT2SOLED_EXE "$2" 5 92
+#		$TEXT2SOLED_EXE "$1" 5 18
+#		$TEXT2SOLED_EXE "$2" 5 32
 	fi
 }
 
@@ -30,8 +44,8 @@ fi
 if [ -f /mnt/usb-stick/nonlinear-c15-update.tar ]
 then
         #stop the playground (and any BBBB)
-        systemctl stop bbbb
         systemctl stop playground
+        systemctl stop bbbb
 
 	#Delete old Updates
 	mkdir -p /update
@@ -54,10 +68,13 @@ then
 	chmod +x /update/run.sh
 	if [ ! -x /update/run.sh ] ; then
 		soled_msg "Error: corrupt archive!"
-		sleep 3
 	else
-		/bin/sh /update/run.sh
-		soled_msg "PLEASE RESTART C15 NOW"
+		if [ ! -f /update/run_v2.sh ] ; then # no new-style update script found
+			soled_msg "old-style update is" "not supported anymore"
+		else
+			/bin/sh /update/run.sh
+			soled_msg "PLEASE RESTART C15 NOW"
+		fi
 	fi
 
 	while true
