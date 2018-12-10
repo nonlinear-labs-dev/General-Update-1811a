@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-06 KSTR
+# last changed: 2018-12-10 KSTR
 # version : 1.0
 #
 # ---------- new style update process -----------
@@ -14,37 +14,30 @@
 #
 #
 
+
+if [ -x /nonlinear/text2soled/text2soled ] ; then
+	TEXT2SOLED_EXE=/nonlinear/text2soled/text2soled
+elif [ -x /nonlinear/text2soled ] ; then
+	TEXT2SOLED_EXE=/nonlinear/text2soled
+else
+	TEXT2SOLED_EXE=echo
+fi
+
 function soled_msg() {
 	# dual paths used for "text2soled" binary for backwards compatibility
 	if (($#==1))
 	then
-		if [ -x /nonlinear/text2soled/text2soled ] ;
-		then
-			/nonlinear/text2soled/text2soled clear
-			/nonlinear/text2soled/text2soled "$1" 5 85
-#			/nonlinear/text2soled/text2soled "$1" 5 25
-		else
-			/nonlinear/text2soled clear
-			/nonlinear/text2soled "$1" 5 85
-#			/nonlinear/text2soled "$1" 5 25
-		fi
+		$TEXT2SOLED_EXE clear
+		$TEXT2SOLED_EXE "$1" 5 85
+#		$TEXT2SOLED_EXE "$1" 5 25
 	fi
 	if (($#==2))
 	then
-		if [ -x /nonlinear/text2soled/text2soled ] ;
-		then
-			/nonlinear/text2soled/text2soled clear
-			/nonlinear/text2soled/text2soled "$1" 5 78
-			/nonlinear/text2soled/text2soled "$2" 5 92
-#			/nonlinear/text2soled/text2soled "$1" 5 18
-#			/nonlinear/text2soled/text2soled "$2" 5 32
-		else
-			/nonlinear/text2soled clear
-			/nonlinear/text2soled "$1" 5 78
-			/nonlinear/text2soled "$2" 5 92
-#			/nonlinear/text2soled "$1" 5 18
-#			/nonlinear/text2soled "$2" 5 32
-		fi
+		$TEXT2SOLED_EXE clear
+		$TEXT2SOLED_EXE "$1" 5 78
+		$TEXT2SOLED_EXE "$2" 5 92
+#		$TEXT2SOLED_EXE "$1" 5 18
+#		$TEXT2SOLED_EXE "$2" 5 32
 	fi
 }
 
@@ -52,6 +45,9 @@ function soled_msg() {
 
 
 set -x
+
+# set verbosity of messages, VERBOSE=false will only display crucial information (general progress and errors)
+VERBOSE=false
 
 # give a name to this update, up to five characters (letters & digits only)
 VERSION=1811a
@@ -109,17 +105,18 @@ chmod +x /update/presets/presets.sh
 /bin/sh  /update/presets/presets.sh --create $VERSION
 return_code=$?
 if [ $return_code -eq 0 ] ; then 	# error codes 60...69
-	soled_msg "$MSG_SAVING_PRESETS" "$MSG_DONE"
-	sleep 1
+	$VERBOSE && soled_msg "$MSG_SAVING_PRESETS" "$MSG_DONE"
+	$VERBOSE && sleep 1
 else
 	if [ $return_code -ne 60 ] ; then
-		soled_msg "$MSG_SAVING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
+		$VERBOSE && soled_msg "$MSG_SAVING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
+		$VERBOSE && sleep 2
 		errors=1
 	else
-		soled_msg "$MSG_SAVING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+		$VERBOSE && soled_msg "$MSG_SAVING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 
@@ -132,13 +129,14 @@ if [ -d "/update/uboot/" ] ; then
 	/bin/sh /update/uboot/update-uboot.sh  1>/update/uboot/uboot.stdout.log  2>/update/uboot/uboot.stderr.log
 	return_code=$?
 	if [ $return_code -eq 0 ] ; then
-		soled_msg "updating boot-loader..." "$MSG_DONE"
+		$VERBOSE && soled_msg "updating boot-loader..." "$MSG_DONE"
+		$VERBOSE && sleep 2
 	else
-		soled_msg "updating boot-loader..." "Error:$return_code. Check log files!"
+		soled_msg "updating boot-loader..." "Error:$return_code"
+		sleep 2
 		cp /update/uboot/uboot.stdout.log  /mnt/usb-stick
 		cp /update/uboot/uboot.stderr.log  /mnt/usb-stick
 	fi
-	sleep 2
 fi
 
 
@@ -148,17 +146,16 @@ chmod +x /update/presets/presets.sh
 /bin/sh  /update/presets/presets.sh --restore $VERSION
 return_code=$?
 if [ $return_code -eq 0 ]; then 	# error codes 60...69
-	soled_msg "$MSG_RESTORING_PRESETS" "$MSG_DONE"
-	sleep 1
+	$VERBOSE && soled_msg "$MSG_RESTORING_PRESETS" "$MSG_DONE"
 else
 	if [ $return_code -ne 60 ] ; then
 		soled_msg "$MSG_RESTORING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 		errors=1
 	else
-		soled_msg "$MSG_RESTORING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+		$VERBOSE && soled_msg "$MSG_RESTORING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 
@@ -170,17 +167,17 @@ if [ true ]; then 	# LPC update unconditionally, no backup anyway
 	/bin/sh /update/LPC/lpc_update.sh /update/LPC/blob.bin
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 30...39
-		soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE"
+		$VERBOSE && soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE"
 	else
 		if [ $return_code -ne 30 ] ; then
 			soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1
 		else
-			soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+			$VERBOSE && soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 # ePC update
@@ -190,17 +187,17 @@ if [ true ]; then 	# ePC update unconditionally, no backup anyway
 	/bin/sh /update/EPC/epc_update.sh
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 40...49
-		soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE"
+		$VERBOSE && soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE"
 	else
 		if [ $return_code -ne 40 ] ; then
 			soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1
 		else
-			soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+			$VERBOSE && soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 # create system & playground backups
@@ -209,17 +206,17 @@ chmod +x /update/backup/backup.sh
 /bin/sh  /update/backup/backup.sh --create $VERSION
 return_code=$?
 if [ $return_code -eq 0 ]; then 	# error codes 10...19
-	soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE"
+	$VERBOSE && soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE"
 else
 	if [ $return_code -ne 10 ] ; then
 		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 		errors=1; fatal=1; skip=1
 	else
-		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+		$VERBOSE && soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
 	fi
 fi
-sleep 2
+$VERBOSE && sleep 2
 
 # system files update
 if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
@@ -228,17 +225,17 @@ if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
 	/bin/sh  /update/system/system_update.sh
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 20...29
-		soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE"
+		$VERBOSE && soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE"
 	else
 		if [ $return_code -ne 20 ] ; then
 			soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1; fatal=1
 		else
-			soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+			$VERBOSE && soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 # playground update
@@ -248,17 +245,17 @@ if [[ ( $skip -eq 0 ) && ( $fatal -eq 0 ) ]]; then 	# playground update only if 
 	/bin/sh /update/BBB/bbb_update.sh
 	return_code=$?
 	if [ $return_code -eq 0 ]; then 	# error codes 50...59
-		soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE"
+		$VERBOSE && soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE"
 	else
 		if [ $return_code -ne 50 ] ; then
 			soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1; fatal=1
 		else
-			soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
+			$VERBOSE && soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
 		fi
 	fi
-	sleep 2
+	$VERBOSE && sleep 2
 fi
 
 
@@ -272,7 +269,7 @@ if [ $errors -eq 0 ] ; then # update executed successfully
 else # errors during update
 	if [ $fatal -eq 0 ] ; then # not a fatal error, might be spurious error, user shall retry
 		echo "update failed"
-		soled_msg "update error! please retry" "$MSG_REBOOT"
+		soled_msg "update error! please retry." "$MSG_REBOOT"
 	else # fatal error, try to recover previous system and PG state from backup
 		soled_msg "update error!" "uninstalling update..."
 		sleep 1
