@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-12-07 KSTR
+# last changed: 2018-12-14 KSTR
 # version : 1.0
 #
 # ---------- Install playground files & services, update to Rev.1811a -----------
@@ -28,13 +28,14 @@ exit_code=0
 if [[ ( -d /nonlinear/playground-$version ) \
 && ( ! -f /nonlinear/playground-$version/dirty ) \
 && ( "`readlink /nonlinear/playground`" = "/nonlinear/playground-$version" ) \
-&& ( "`cat /nonlinear/playground/NonMaps/war/nonmaps-version.txt`" = "`cat /update/BBB/playground/NonMaps/war/nonmaps-version.txt`" ) ]]
-then # this exact PG was correctly installed before
+&& ( "`cat /nonlinear/playground/NonMaps/war/nonmaps-version.txt`" == "`cat /update/BBB/playground/NonMaps/war/nonmaps-version.txt`" ) \
+&& ( "`grep "changed" /nonlinear/playground/NonMaps/war/online-help/about.html`" == "`grep "changed" /update/BBB/playground/NonMaps/war/online-help/about.html`" ) ]]
+then # this exact PG (incl. online help) has been correctly installed before
 	printf "%s\r\n" "W50 UI update: Warning, this UI has been successfully installed before. Quit without installing." >> /update/errors.log
 	exit_code=50 	# 50 indicates warnings only, no fatal errors
 	# we actually do NOT exit here because the forced system files update that has just finished before this script is called
 	# overwrites the playground.service with the version *without* BBBB !!!! ==> services reinstall as below required !
-else # new install (incl. same global version but different PG build), or overriding a failed install
+else # new install (incl. same global version but different PG/help build), or overriding a failed install
 	rm -rf  /nonlinear/playground-$version		# remove any leftovers from a previous unsuccessful install
 
 	# copy all PG files and folders. Test if PG and BBBB executables are present.
