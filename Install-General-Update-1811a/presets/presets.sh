@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-06 KSTR
+# last changed: 2018-12-14 KSTR
 # version : 1.0
 #
 # ---------- create and restore presets backup -----------
@@ -20,12 +20,6 @@ if [ -z "$VERSION" ] ; then
 	printf "%s\r\n" "E62 presets: no version given" >> /update/errors.log
 	exit 62
 fi
-
-systemctl stop playground
-while  pidof playground ; do
-	echo "stopping PG..."
-	sleep 0.1
-done
 	
 
 # add suffix to version string because files/folders/symlinks with conflicting names may exist
@@ -34,6 +28,29 @@ VERSION=$2.bak
 
 if [ "$ACTION" = "--create" ] ; then
 # create backup of currently installed presets
+	# check if /internalstorage is to be mounted and if so, wait until mounting ready
+	# this is needed because original install-update-from-usb.service doens't wait for the mounting to complete
+	if systemctl is-enabled internalstorage.mount ; then # service exists and is enabled
+		timeout=10 # 10 seconds for internalstorage.mount to report "active" should be sufficient
+		while true ; do
+			if systemctl is-failed internalstorage.mount ; then # service start has failed
+				echo "internalstorage.mount status: failed"
+				break
+			elif systemctl is-active internalstorage.mount ; then # service start was successful
+				echo "internalstorage.mount status: active"
+				break
+			else # still waiting
+				echo "...still waiting for  internalstorage.mount  status (active or failed)"
+				sleep 1
+				echo $((timeout = timeout - 1))
+				if [ $timeout -eq 0 ] ; then
+					echo "internalstorage.mount status: timeout --> stopping scan"
+					break
+				fi
+			fi
+		done
+	fi
+	
 	# locate presets
 	if [ -d /internalstorage/preset-manager ] ; then # nominal location "/internalstorage/preset-manager", either a dir or mounted flash
 		PRESET_SOURCE_DIR=/internalstorage/preset-manager
@@ -41,7 +58,7 @@ if [ "$ACTION" = "--create" ] ; then
 		PRESET_SOURCE_DIR=/preset-manager
 	else # nothing to backup, exit gracefully
 		printf "%s\r\n" "W60 presets: no data to backup/restore" >> /update/errors.log
-		exit 0
+		exit 60
 	fi
 	
 	rm -rf  /preset-manager.$VERSION  # delete any previous backup data
@@ -80,7 +97,7 @@ elif [ "$ACTION" = "--restore" ] ; then
 		fi
 	else # no backup found
 		printf "%s\r\n" "W60 presets: no data to backup/restore" >> /update/errors.log
-		exit 0
+		exit 60
 	fi
 else
 	printf "%s\r\n" "E63 presets: illegal action given" >> /update/errors.log
