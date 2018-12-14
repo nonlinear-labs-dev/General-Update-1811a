@@ -1,0 +1,10 @@
+[Unit]
+Description=check and display C15 system status (ePC not alive, /internalstorage not mounted, etc)
+After=syslog.target network.target systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=-/nonlinear/scripts/check_system.sh
+
+[Install]
+WantedBy=multi-user.target
