@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-10 KSTR
+# last changed: 2018-12-14 KSTR
 # version : 1.0
 #
 # ---------- new style update process -----------
@@ -109,9 +109,9 @@ if [ $return_code -eq 0 ] ; then 	# error codes 60...69
 	$VERBOSE && sleep 1
 else
 	if [ $return_code -ne 60 ] ; then
-		$VERBOSE && soled_msg "$MSG_SAVING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
-		$VERBOSE && sleep 2
+		soled_msg "$MSG_SAVING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 		errors=1
+		sleep 2
 	else
 		$VERBOSE && soled_msg "$MSG_SAVING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
@@ -133,9 +133,9 @@ if [ -d "/update/uboot/" ] ; then
 		$VERBOSE && sleep 2
 	else
 		soled_msg "updating boot-loader..." "Error:$return_code"
-		sleep 2
 		cp /update/uboot/uboot.stdout.log  /mnt/usb-stick
 		cp /update/uboot/uboot.stderr.log  /mnt/usb-stick
+		sleep 2
 	fi
 fi
 
@@ -151,6 +151,7 @@ else
 	if [ $return_code -ne 60 ] ; then
 		soled_msg "$MSG_RESTORING_PRESETS" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 		errors=1
+		sleep 2
 	else
 		$VERBOSE && soled_msg "$MSG_RESTORING_PRESETS" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
@@ -172,6 +173,7 @@ if [ true ]; then 	# LPC update unconditionally, no backup anyway
 		if [ $return_code -ne 30 ] ; then
 			soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1
+			sleep 2
 		else
 			$VERBOSE && soled_msg "$MSG_UPDATING_RT_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
@@ -192,6 +194,7 @@ if [ true ]; then 	# ePC update unconditionally, no backup anyway
 		if [ $return_code -ne 40 ] ; then
 			soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1
+			sleep 2
 		else
 			$VERBOSE && soled_msg "$MSG_UPDATING_AUDIO_ENGINE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
@@ -211,6 +214,7 @@ else
 	if [ $return_code -ne 10 ] ; then
 		soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 		errors=1; fatal=1; skip=1
+		sleep 2
 	else
 		$VERBOSE && soled_msg "$MSG_CREATING_BACKUP""\"$VERSION\"..." "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 		warnings=1
@@ -230,6 +234,7 @@ if [ $skip -eq 0 ]; then 	# system file update only if backup was successful
 		if [ $return_code -ne 20 ] ; then
 			soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1; fatal=1
+			sleep 2
 		else
 			$VERBOSE && soled_msg "$MSG_UPDATING_SYSTEM_FILES" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
@@ -250,6 +255,7 @@ if [[ ( $skip -eq 0 ) && ( $fatal -eq 0 ) ]]; then 	# playground update only if 
 		if [ $return_code -ne 50 ] ; then
 			soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_FAILED_WITH_ERROR_CODE""$return_code"
 			errors=1; fatal=1
+			sleep 2
 		else
 			$VERBOSE && soled_msg "$MSG_UPDATING_UI_FIRMWARE" "$MSG_DONE_WITH_WARNING_CODE""$return_code)"
 			warnings=1
