@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-12-07 KSTR
+# last changed: 2018-12-13 KSTR
 # version : 1.0
 #
 # ---------- Install system files, update to Rev.1811a -----------
@@ -37,15 +37,23 @@ echo "...  /etc/systemd/system/*"
 if [ $errors -eq 0 ] ; then
 	FILE=install-update-from-usb.service
 	chmod 0644  /update/system/services/etc_systemd_system/$FILE `# clear executable` \
-	&& cp -pf   /update/system/services/etc_systemd_system/$FILE  /etc/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
+	&& cp -af   /update/system/services/etc_systemd_system/$FILE  /etc/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
 	&& mv -f    /etc/systemd/system/$FILE.$VERSION  /etc/systemd/system/$FILE # atomic rename (fail-safe)
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
 if [ $errors -eq 0 ] ; then
 	FILE=playground.service
 	chmod 0644  /update/system/services/etc_systemd_system/$FILE `# clear executable` \
-	&& cp -pf   /update/system/services/etc_systemd_system/$FILE  /etc/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
+	&& cp -af   /update/system/services/etc_systemd_system/$FILE  /etc/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
 	&& mv -f    /etc/systemd/system/$FILE.$VERSION  /etc/systemd/system/$FILE # atomic rename (fail-safe)
+	if [ $? -ne 0 ] ; then errors=1 ; fi
+fi
+if [ $errors -eq 0 ] ; then
+	FILE=check-system.service
+	chmod 0644  /update/system/services/etc_systemd_system/$FILE `# clear executable` \
+	&& cp -af   /update/system/services/etc_systemd_system/$FILE  /etc/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
+	&& mv -f    /etc/systemd/system/$FILE.$VERSION  /etc/systemd/system/$FILE `# atomic rename (fail-safe)` \
+	&& systemctl enable $FILE
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
 
@@ -53,14 +61,14 @@ echo "...  /lib/systemd/system/*"
 if [ $errors -eq 0 ] ; then
 	FILE=systemd-modules-load.service
 	chmod 0644  /update/system/services/lib_systemd_system/$FILE `# clear executable` \
-	&& cp -pf   /update/system/services/lib_systemd_system/$FILE  /lib/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
+	&& cp -af   /update/system/services/lib_systemd_system/$FILE  /lib/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
 	&& mv -f    /lib/systemd/system/$FILE.$VERSION  /lib/systemd/system/$FILE # atomic rename (fail-safe)
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
 if [ $errors -eq 0 ] ; then
 	FILE=systemd-poweroff.service
 	chmod 0644  /update/system/services/lib_systemd_system/$FILE `# clear executable` \
-	&& cp -pf   /update/system/services/lib_systemd_system/$FILE  /lib/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
+	&& cp -af   /update/system/services/lib_systemd_system/$FILE  /lib/systemd/system/$FILE.$VERSION `# copy with a temporary name` \
 	&& mv -f    /lib/systemd/system/$FILE.$VERSION  /lib/systemd/system/$FILE # atomic rename (fail-safe)
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
