@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-07 KSTR
+# last changed: 2018-12-14 KSTR
 # version : 1.0
 #
 # ---------- create and restore playground and system/services backups -----------
@@ -69,6 +69,15 @@ elif [ "$ACTION" = "--restore" ] ; then
 			cp -af  $FOLDER.$VERSION/$FILE  $FOLDER/$FILE # copy it into original folder, forced overwrite
 			systemctl enable $FILE # and (re-)establish symlink to enable it (redundant in this case)
 		fi # note : playgrund must exist anyway so no point to deal with it when missing
+
+		FILE=check-system.service
+		if [ -f $FOLDER.$VERSION/$FILE ] ; then # file exists in backup
+			cp -af  $FOLDER.$VERSION/$FILE  $FOLDER/$FILE # copy it into original folder, forced overwrite
+			systemctl enable $FILE # and (re-)establish symlink to enable it (redundant in this case)
+		else # file doesn't exist in backup
+			systemctl disable $FILE # disable service
+			rm -f $FOLDER/$FILE	# and delete it
+		fi
 		
 		rm -rf  $FOLDER.$VERSION # delete the backup folder
 		did_something=true
