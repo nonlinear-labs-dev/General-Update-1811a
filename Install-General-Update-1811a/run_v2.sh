@@ -267,7 +267,7 @@ fi
 
 # error recovery
 if [ $errors -eq 0 ] ; then # update executed successfully
-	if [ warnings -eq 0 ] ; then
+	if [ $warnings -eq 0 ] ; then
 		rm -f /update/errors.log
 	fi
 	echo "update finished"
