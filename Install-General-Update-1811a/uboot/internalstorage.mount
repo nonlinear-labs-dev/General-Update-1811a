@@ -1,5 +1,6 @@
 [Unit]
-Description = internal storage
+Description = Internal Storage (on-board FLASH)
+Before=playground.service install-update-from-usb.service
 
 [Mount]
 What = /dev/disk/by-uuid/ea9ed055-84c5-4c76-b8c3-aba0b9eeb083
