@@ -5,6 +5,7 @@ Wants=install-update-from-usb.service
 
 [Service]
 ExecStart=/nonlinear/playground/bbbb
+ExecStartPost=-/nonlinear/scripts/restart-pg-if-running.sh
 Restart=on-failure
 RestartSec=1
 
