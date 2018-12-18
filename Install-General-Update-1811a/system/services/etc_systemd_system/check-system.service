@@ -1,6 +1,6 @@
 [Unit]
 Description=check and display C15 system status (ePC not alive, /internalstorage not mounted, etc)
-After=syslog.target network.target systemd-modules-load.service
+After=syslog.target network.target systemd-modules-load.service install-update-from-usb.service
 
 [Service]
 Type=oneshot
