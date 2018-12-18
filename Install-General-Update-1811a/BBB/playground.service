@@ -1,6 +1,6 @@
 [Unit]
 Description=Nonlinear-Labs Playground
-After=syslog.target network.target systemd-modules-load.service install-update-from-usb.service internalstorage.mount 
+After=syslog.target network.target systemd-modules-load.service install-update-from-usb.service internalstorage.mount bbbb.service
 Wants=install-update-from-usb.service internalstorage.mount
 
 [Service]
