@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-18 KSTR
+# last changed: 2018-12-20 KSTR
 # version : 1.0
 #
 # ---------- restart playground if running -----------
@@ -11,5 +11,6 @@
 # before the PG is restarted.
 # Not nice, I know, but the only quickly feasible fix I found.
 
-kill -n 4 `pidof playground` >/dev/null  # if PG PID doesn't exist pidof returns "" and kill terminates with a usage message
+sync
+killall -s SIGABRT playground
 exit 0
