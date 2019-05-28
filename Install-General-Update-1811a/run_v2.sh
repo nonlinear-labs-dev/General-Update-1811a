@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# last changed: 2018-12-14 KSTR
+# last changed: 2019-05-28 KSTR
 # version : 1.0
 #
 # ---------- new style update process -----------
@@ -12,7 +12,17 @@
 # 
 # Script does not return, user is forced to reboot.
 #
+# changes:
+#	2019-05-28	: added explicit and unconditional install
+#			  for an up-to-date "text2soled" display function
 #
+
+
+rm -rf /nonlinear/text2soled/
+rm -rf /nonlinear/text2soled
+mkdir /nonlinear/text2soled/
+cp -af /update/text2soled  /nonlinear
+chmod +x /nonlinear/text2soled/text2soled 
 
 
 if [ -x /nonlinear/text2soled/text2soled ] ; then
