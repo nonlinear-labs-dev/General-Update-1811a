@@ -4,7 +4,7 @@ After=syslog.target network.target systemd-modules-load.service install-update-f
 Wants=install-update-from-usb.service internalstorage.mount
 
 [Service]
-ExecStart=/nonlinear/playground/playground --bbbb=192.168.8.2
+ExecStart=/nonlinear/playground/playground --bbbb=localhost
 ExecStop=-/nonlinear/scripts/soled-exit-PG-message.sh
 ExecStopPost=-/nonlinear/scripts/playground-stop-post.sh
 Restart=on-failure

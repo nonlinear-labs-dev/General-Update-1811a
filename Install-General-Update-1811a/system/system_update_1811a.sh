@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# last changed: 2018-12-13 KSTR
+# last changed: 2019-06-07 KSTR
 # version : 1.0
 #
 # ---------- Install system files, update to Rev.1811a -----------
@@ -72,6 +72,16 @@ if [ $errors -eq 0 ] ; then
 	&& mv -f    /lib/systemd/system/$FILE.$VERSION  /lib/systemd/system/$FILE # atomic rename (fail-safe)
 	if [ $? -ne 0 ] ; then errors=1 ; fi
 fi
+
+echo "...  /etc/network/*"
+if [ $errors -eq 0 ] ; then
+	FILE=interfaces
+	chmod 0644  /update/system/services/etc_network/$FILE `# clear executable` \
+	&& cp -af   /update/system/services/etc_network/$FILE  /etc/network/$FILE.$VERSION `# copy with a temporary name` \
+	&& mv -f    /etc/network/$FILE.$VERSION  /etc/network/$FILE # atomic rename (fail-safe)
+	if [ $? -ne 0 ] ; then errors=1 ; fi
+fi
+
 
 # something went wrong
 if [ $errors -ne 0 ] ; then
